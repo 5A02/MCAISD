@@ -106,12 +106,12 @@ async function callLlm(options: Required<SkinOptions>, env: Record<string, strin
         {
           role: "system",
           content:
-            "You design Minecraft Java 64x64 skins for a pixel renderer. Return strict JSON only. Use #RRGGBB colors. Preserve the user's requested visual identity. The renderer starts from a simple base skin, then applies your drawCommands on exact 64x64 UV coordinates.",
+            "You design small detail overlays for Minecraft Java 64x64 skins. Return strict JSON only. Use #RRGGBB colors. The local renderer already creates the base head, body, outfit, and equipment from the user's prompt. Your drawCommands should only add small details, trims, symbols, highlights, scratches, wires, buttons, emblems, and ornaments.",
         },
         {
           role: "user",
           content: JSON.stringify({
-            task: "Create a high-fidelity Minecraft skin plan and 4 variants. Every variant must include pixel drawCommands that visibly encode the user's requested details.",
+            task: "Create a faithful Minecraft skin plan and 4 variants. Every variant must keep the requested character identity and include only small detail drawCommands for the local semantic renderer.",
             input: options,
             uvGuide: {
               headFront: "x 8-15, y 8-15",
@@ -127,11 +127,12 @@ async function callLlm(options: Required<SkinOptions>, env: Record<string, strin
               note: "All coordinates are inclusive on a 64x64 PNG. Avoid empty transparent areas unless intentionally erasing.",
             },
             commandRules: [
-              "Use 12-28 drawCommands per variant. Prefer fewer larger shapes plus a few small details.",
+              "Use 12-28 drawCommands per variant. Keep every rect/checker at 18 pixels or smaller.",
+              "Do not draw full head, full torso, full arms, full legs, or large clothing panels. The local renderer already does that.",
               "Do not change the user's character role, species, gender, era, equipment, or named colors.",
               "All 4 variants must keep every explicit object requested by the user. Vary only layout, trim, ornament density, and small color accents.",
               "If the user says knight, every variant is a knight. Do not output squire, apothecary, herald, mage, robot, or unrelated roles.",
-              "Use rect for armor, clothing panels, capes, hair blocks, masks, and emblems.",
+              "Use rect only for small emblems, buckles, rivets, highlights, scratches, visor slits, tiny armor plates, and trim.",
               "Use line or pixel for eyes, straps, glowing wires, stars, logos, shield symbols, trims, and small ornaments.",
               "Use checker for cloth, chainmail, plaid, magic texture, or mechanical plating.",
               "Keep the main requested object on visible front coordinates: headFront, torsoFront, armsFront, legsFront.",
@@ -258,6 +259,7 @@ function normalizeDrawCommands(value: unknown): DrawCommand[] {
     if (command.type === "rect") {
       const rect = normalizeRect(command.x, command.y, command.w, command.h);
       if (!rect) return [];
+      if (rect.w * rect.h > 18) return [];
       return [
         {
           type: "rect" as const,
@@ -271,6 +273,7 @@ function normalizeDrawCommands(value: unknown): DrawCommand[] {
     if (command.type === "checker") {
       const rect = normalizeRect(command.x, command.y, command.w, command.h);
       if (!rect) return [];
+      if (rect.w * rect.h > 18) return [];
       return [
         {
           type: "checker" as const,
@@ -344,8 +347,8 @@ function buildMandatoryDrawCommands(options: Required<SkinOptions>): DrawCommand
 
   if (matchesAny(prompt, ["cape", "cloak", "披风", "斗篷"])) {
     commands.push(
-      { type: "rect", x: 32, y: 20, w: 8, h: 12, color: options.mainColor, alpha: 255 },
-      { type: "rect", x: 32, y: 36, w: 8, h: 12, color: options.mainColor, alpha: 230 },
+      { type: "rect", x: 32, y: 20, w: 8, h: 2, color: options.mainColor, alpha: 255 },
+      { type: "rect", x: 32, y: 36, w: 8, h: 2, color: options.mainColor, alpha: 230 },
       { type: "line", x1: 33, y1: 21, x2: 33, y2: 31, color: accent, alpha: 255 },
       { type: "line", x1: 38, y1: 21, x2: 38, y2: 31, color: accent, alpha: 255 },
     );
@@ -356,7 +359,7 @@ function buildMandatoryDrawCommands(options: Required<SkinOptions>): DrawCommand
       { type: "rect", x: 8, y: 8, w: 8, h: 3, color: "#111111", alpha: 255 },
       { type: "rect", x: 8, y: 11, w: 1, h: 4, color: "#111111", alpha: 255 },
       { type: "rect", x: 15, y: 11, w: 1, h: 4, color: "#111111", alpha: 255 },
-      { type: "rect", x: 40, y: 8, w: 8, h: 8, color: "#111111", alpha: 235 },
+      { type: "rect", x: 40, y: 8, w: 8, h: 2, color: "#111111", alpha: 235 },
       { type: "line", x1: 10, y1: 12, x2: 14, y2: 12, color: accent, alpha: 255 },
     );
   }

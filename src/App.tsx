@@ -19,7 +19,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { generateSkinPlan } from "./aiClient";
 import {
-  applyDrawCommands,
+  applyDetailDrawCommands,
   cloneImageData,
   drawImageDataToCanvas,
   exportSkin,
@@ -122,11 +122,40 @@ export default function App() {
     setOptions((current) => ({ ...current, [key]: value }));
   }
 
+  function readMaterialValue(ref: React.RefObject<HTMLElement & { value?: string }>, fallback: string): string {
+    const host = ref.current;
+    const value = host?.value;
+    if (typeof value === "string" && value.length > 0) return value;
+    const inner = host?.shadowRoot?.querySelector("textarea, input") as HTMLTextAreaElement | HTMLInputElement | null;
+    return inner?.value || fallback;
+  }
+
+  function readMaterialNumber(ref: React.RefObject<HTMLElement & { value?: number }>, fallback: number): number {
+    const host = ref.current;
+    const value = Number(host?.value);
+    if (Number.isFinite(value) && value > 0) return value;
+    const inner = host?.shadowRoot?.querySelector("input") as HTMLInputElement | null;
+    const innerValue = Number(inner?.value);
+    return Number.isFinite(innerValue) && innerValue > 0 ? innerValue : fallback;
+  }
+
+  function currentOptionsFromControls(): SkinOptions {
+    return {
+      ...options,
+      prompt: readMaterialValue(promptFieldRef, options.prompt),
+      model: readMaterialValue(modelSelectRef, options.model) as SkinModel,
+      accessory: readMaterialValue(accessorySelectRef, options.accessory),
+      complexity: readMaterialNumber(complexitySliderRef, options.complexity),
+    };
+  }
+
   async function generate() {
     setIsGenerating(true);
     setGenerationStatus("正在调用 AI 解析角色描述");
+    const generationOptions = currentOptionsFromControls();
+    setOptions(generationOptions);
     try {
-      const plan = await generateSkinPlan(options);
+      const plan = await generateSkinPlan(generationOptions);
       const nextOptions: SkinOptions = {
         prompt: plan.prompt,
         style: plan.style,
@@ -138,7 +167,7 @@ export default function App() {
       };
       const next = plan.variants.map((variant, index) => ({
         id: `${Date.now()}-ai-${index}`,
-        image: applyDrawCommands(
+        image: applyDetailDrawCommands(
           generateSkin(
             {
               ...nextOptions,
@@ -163,7 +192,7 @@ export default function App() {
     } catch (error) {
       const next = [0, 1, 2, 3].map((variant) => ({
         id: `${Date.now()}-local-${variant}`,
-        image: generateSkin(options, variant),
+        image: generateSkin(generationOptions, variant),
       }));
       setCandidates(next);
       setSelected(cloneImageData(next[0].image));
