@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
+import { generateSkinPlan } from "./aiClient";
 import {
   cloneImageData,
   drawImageDataToCanvas,
@@ -61,6 +62,8 @@ export default function App() {
   const modelSelectRef = useRef<HTMLElement & { value: string }>(null);
   const accessorySelectRef = useRef<HTMLElement & { value: string }>(null);
   const complexitySliderRef = useRef<HTMLElement & { value: number }>(null);
+  const generateButtonRef = useRef<HTMLElement | null>(null);
+  const generateRef = useRef<() => void>(() => undefined);
   const [options, setOptions] = useState<SkinOptions>({
     prompt: examples[0],
     style: "cyberpunk",
@@ -95,6 +98,7 @@ export default function App() {
   const [history, setHistory] = useState<ImageData[]>([]);
   const [redoStack, setRedoStack] = useState<ImageData[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationStatus, setGenerationStatus] = useState("AI 已接入 DashScope");
 
   const textureUrl = useMemo(() => imageDataToTextureUrl(selected), [selected]);
 
@@ -117,20 +121,59 @@ export default function App() {
     setOptions((current) => ({ ...current, [key]: value }));
   }
 
-  function generate() {
+  async function generate() {
     setIsGenerating(true);
-    window.setTimeout(() => {
+    setGenerationStatus("正在调用 AI 解析角色描述");
+    try {
+      const plan = await generateSkinPlan(options);
+      const nextOptions: SkinOptions = {
+        prompt: plan.prompt,
+        style: plan.style,
+        model: plan.model,
+        mainColor: plan.mainColor,
+        hairColor: plan.hairColor,
+        accessory: plan.accessory,
+        complexity: plan.complexity,
+      };
+      const next = plan.variants.map((variant, index) => ({
+        id: `${Date.now()}-ai-${index}`,
+        image: generateSkin(
+          {
+            ...nextOptions,
+            prompt: variant.prompt,
+            style: variant.style,
+            mainColor: variant.mainColor,
+            hairColor: variant.hairColor,
+            accessory: variant.accessory,
+            complexity: variant.complexity,
+          },
+          index,
+        ),
+      }));
+      setCandidates(next);
+      setSelected(cloneImageData(next[0].image));
+      setOptions(nextOptions);
+      setHistory([]);
+      setRedoStack([]);
+      setGenerationStatus("AI 已生成 4 个皮肤方案");
+    } catch (error) {
       const next = [0, 1, 2, 3].map((variant) => ({
-        id: `${Date.now()}-${variant}`,
+        id: `${Date.now()}-local-${variant}`,
         image: generateSkin(options, variant),
       }));
       setCandidates(next);
       setSelected(cloneImageData(next[0].image));
       setHistory([]);
       setRedoStack([]);
+      setGenerationStatus(`AI 调用失败，已使用本地生成：${error instanceof Error ? error.message : "未知错误"}`);
+    } finally {
       setIsGenerating(false);
-    }, 480);
+    }
   }
+
+  generateRef.current = () => {
+    void generate();
+  };
 
   function commit(next: ImageData) {
     setHistory((items) => [...items.slice(-24), cloneImageData(selected)]);
@@ -173,6 +216,18 @@ export default function App() {
     const next = await readSkinFile(file);
     commit(next);
   }
+
+  useEffect(() => {
+    const button = generateButtonRef.current;
+    if (!button) return;
+    const handleClick = () => {
+      generateRef.current();
+    };
+    button.addEventListener("click", handleClick);
+    return () => {
+      button.removeEventListener("click", handleClick);
+    };
+  }, []);
 
   return (
     <main className="app-shell">
@@ -305,10 +360,11 @@ export default function App() {
             />
           </label>
 
-          <md-filled-button className="generate-button" onClick={generate} disabled={isGenerating}>
+          <md-filled-button ref={generateButtonRef} className="generate-button" disabled={isGenerating}>
             <Sparkles size={18} />
             {isGenerating ? "生成中" : "生成 4 个候选"}
           </md-filled-button>
+          <div className="generation-status">{generationStatus}</div>
 
           <div className="candidate-grid">
             {candidates.map((candidate, index) => (

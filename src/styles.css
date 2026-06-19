@@ -273,6 +273,14 @@ input[type="range"] {
   cursor: wait;
 }
 
+.generation-status {
+  margin-top: 8px;
+  color: #667085;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
 .candidate-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
