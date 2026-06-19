@@ -1,4 +1,15 @@
-import type { SkinModel, SkinOptions, SkinStyle } from "./skin";
+import type { DrawCommand, SkinModel, SkinOptions, SkinStyle } from "./skin";
+
+export type AiSkinVariant = {
+  prompt: string;
+  mainColor: string;
+  hairColor: string;
+  accessory: string;
+  style: SkinStyle;
+  complexity: number;
+  drawCommands: DrawCommand[];
+  notes?: string[];
+};
 
 export type AiSkinPlan = {
   prompt: string;
@@ -8,14 +19,7 @@ export type AiSkinPlan = {
   hairColor: string;
   accessory: string;
   complexity: number;
-  variants: Array<{
-    prompt: string;
-    mainColor: string;
-    hairColor: string;
-    accessory: string;
-    style: SkinStyle;
-    complexity: number;
-  }>;
+  variants: AiSkinVariant[];
 };
 
 export async function generateSkinPlan(options: SkinOptions): Promise<AiSkinPlan> {

@@ -27,6 +27,12 @@ export type Rect = {
   h: number;
 };
 
+export type DrawCommand =
+  | { type: "rect"; x: number; y: number; w: number; h: number; color: string; alpha?: number }
+  | { type: "line"; x1: number; y1: number; x2: number; y2: number; color: string; alpha?: number }
+  | { type: "pixel"; x: number; y: number; color: string; alpha?: number }
+  | { type: "checker"; x: number; y: number; w: number; h: number; colorA: string; colorB: string; alpha?: number };
+
 export const SKIN_SIZE = 64;
 
 export const PART_RECTS: Record<string, Rect[]> = {
@@ -95,6 +101,55 @@ export function makeEmptySkin(): ImageData {
 
 export function cloneImageData(source: ImageData): ImageData {
   return new ImageData(new Uint8ClampedArray(source.data), source.width, source.height);
+}
+
+export function applyDrawCommands(source: ImageData, commands: DrawCommand[] = []): ImageData {
+  const next = cloneImageData(source);
+  commands.slice(0, 120).forEach((command) => {
+    if (command.type === "rect") {
+      const rect = clampRect(command.x, command.y, command.w, command.h);
+      if (!rect) return;
+      fillRect(next, rect.x, rect.y, rect.w, rect.h, normalizeCommandColor(command.color), normalizeAlpha(command.alpha));
+      return;
+    }
+
+    if (command.type === "checker") {
+      const rect = clampRect(command.x, command.y, command.w, command.h);
+      if (!rect) return;
+      drawChecker(
+        next,
+        rect,
+        normalizeCommandColor(command.colorA),
+        normalizeCommandColor(command.colorB),
+        normalizeAlpha(command.alpha),
+      );
+      return;
+    }
+
+    if (command.type === "line") {
+      drawLine(
+        next,
+        clampIntRange(command.x1, 0, SKIN_SIZE - 1),
+        clampIntRange(command.y1, 0, SKIN_SIZE - 1),
+        clampIntRange(command.x2, 0, SKIN_SIZE - 1),
+        clampIntRange(command.y2, 0, SKIN_SIZE - 1),
+        normalizeCommandColor(command.color),
+        normalizeAlpha(command.alpha),
+      );
+      return;
+    }
+
+    if (command.type === "pixel") {
+      setRawPixel(
+        next,
+        clampIntRange(command.x, 0, SKIN_SIZE - 1),
+        clampIntRange(command.y, 0, SKIN_SIZE - 1),
+        normalizeCommandColor(command.color),
+        normalizeAlpha(command.alpha),
+      );
+    }
+  });
+  return next;
 }
 
 export function generateSkin(options: SkinOptions, variant = 0): ImageData {
@@ -192,6 +247,38 @@ function fillRect(image: ImageData, x: number, y: number, w: number, h: number, 
       image.data[i + 1] = g;
       image.data[i + 2] = b;
       image.data[i + 3] = alpha;
+    }
+  }
+}
+
+function drawChecker(image: ImageData, rect: Rect, colorA: string, colorB: string, alpha = 255): void {
+  for (let py = rect.y; py < rect.y + rect.h; py += 1) {
+    for (let px = rect.x; px < rect.x + rect.w; px += 1) {
+      setRawPixel(image, px, py, (px + py) % 2 === 0 ? colorA : colorB, alpha);
+    }
+  }
+}
+
+function drawLine(image: ImageData, x1: number, y1: number, x2: number, y2: number, color: string, alpha = 255): void {
+  let currentX = x1;
+  let currentY = y1;
+  const dx = Math.abs(x2 - x1);
+  const sx = x1 < x2 ? 1 : -1;
+  const dy = -Math.abs(y2 - y1);
+  const sy = y1 < y2 ? 1 : -1;
+  let error = dx + dy;
+
+  while (true) {
+    setRawPixel(image, currentX, currentY, color, alpha);
+    if (currentX === x2 && currentY === y2) break;
+    const doubledError = 2 * error;
+    if (doubledError >= dy) {
+      error += dy;
+      currentX += sx;
+    }
+    if (doubledError <= dx) {
+      error += dx;
+      currentY += sy;
     }
   }
 }
@@ -343,6 +430,28 @@ function shade(hex: string, amount: number): string {
 
 function clamp(value: number): number {
   return Math.max(0, Math.min(255, Math.round(value)));
+}
+
+function clampRect(x: number, y: number, w: number, h: number): Rect | null {
+  const left = clampIntRange(x, 0, SKIN_SIZE - 1);
+  const top = clampIntRange(y, 0, SKIN_SIZE - 1);
+  const right = clampIntRange(x + Math.max(1, Math.round(w)) - 1, 0, SKIN_SIZE - 1);
+  const bottom = clampIntRange(y + Math.max(1, Math.round(h)) - 1, 0, SKIN_SIZE - 1);
+  if (right < left || bottom < top) return null;
+  return { x: left, y: top, w: right - left + 1, h: bottom - top + 1 };
+}
+
+function clampIntRange(value: number, min: number, max: number): number {
+  const normalized = Number.isFinite(value) ? value : min;
+  return Math.max(min, Math.min(max, Math.round(normalized)));
+}
+
+function normalizeAlpha(alpha: number | undefined): number {
+  return clampIntRange(alpha ?? 255, 0, 255);
+}
+
+function normalizeCommandColor(color: string): string {
+  return /^#[0-9a-fA-F]{6}$/.test(color) ? color : "#111111";
 }
 
 function hashText(input: string): number {

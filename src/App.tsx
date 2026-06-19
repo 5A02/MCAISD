@@ -19,6 +19,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { generateSkinPlan } from "./aiClient";
 import {
+  applyDrawCommands,
   cloneImageData,
   drawImageDataToCanvas,
   exportSkin,
@@ -137,17 +138,20 @@ export default function App() {
       };
       const next = plan.variants.map((variant, index) => ({
         id: `${Date.now()}-ai-${index}`,
-        image: generateSkin(
-          {
-            ...nextOptions,
-            prompt: variant.prompt,
-            style: variant.style,
-            mainColor: variant.mainColor,
-            hairColor: variant.hairColor,
-            accessory: variant.accessory,
-            complexity: variant.complexity,
-          },
-          index,
+        image: applyDrawCommands(
+          generateSkin(
+            {
+              ...nextOptions,
+              prompt: variant.prompt,
+              style: variant.style,
+              mainColor: variant.mainColor,
+              hairColor: variant.hairColor,
+              accessory: variant.accessory,
+              complexity: variant.complexity,
+            },
+            index,
+          ),
+          variant.drawCommands,
         ),
       }));
       setCandidates(next);
