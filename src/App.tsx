@@ -57,6 +57,10 @@ const accessories = ["无", "耳机", "面具", "围巾", "披风"];
 
 export default function App() {
   const importInputRef = useRef<HTMLInputElement | null>(null);
+  const promptFieldRef = useRef<HTMLElement & { value: string }>(null);
+  const modelSelectRef = useRef<HTMLElement & { value: string }>(null);
+  const accessorySelectRef = useRef<HTMLElement & { value: string }>(null);
+  const complexitySliderRef = useRef<HTMLElement & { value: number }>(null);
   const [options, setOptions] = useState<SkinOptions>({
     prompt: examples[0],
     style: "cyberpunk",
@@ -93,6 +97,21 @@ export default function App() {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const textureUrl = useMemo(() => imageDataToTextureUrl(selected), [selected]);
+
+  useEffect(() => {
+    if (promptFieldRef.current && promptFieldRef.current.value !== options.prompt) {
+      promptFieldRef.current.value = options.prompt;
+    }
+    if (modelSelectRef.current && modelSelectRef.current.value !== options.model) {
+      modelSelectRef.current.value = options.model;
+    }
+    if (accessorySelectRef.current && accessorySelectRef.current.value !== options.accessory) {
+      accessorySelectRef.current.value = options.accessory;
+    }
+    if (complexitySliderRef.current && complexitySliderRef.current.value !== options.complexity) {
+      complexitySliderRef.current.value = options.complexity;
+    }
+  }, [options]);
 
   function updateOption<K extends keyof SkinOptions>(key: K, value: SkinOptions[K]) {
     setOptions((current) => ({ ...current, [key]: value }));
@@ -173,22 +192,18 @@ export default function App() {
               event.currentTarget.value = "";
             }}
           />
-          <button className="ghost-button" type="button" onClick={() => importInputRef.current?.click()}>
+          <md-filled-tonal-button onClick={() => importInputRef.current?.click()}>
             <Import size={18} />
             导入 PNG
-          </button>
-          <button className="ghost-button" type="button" onClick={resetCanvas} title="清空画布">
+          </md-filled-tonal-button>
+          <md-filled-tonal-button onClick={resetCanvas} title="清空画布">
             <RotateCcw size={18} />
             清空
-          </button>
-          <button
-            className="primary-button"
-            type="button"
-            onClick={() => exportSkin(selected, `mcaisd-skin-${Date.now()}.png`)}
-          >
+          </md-filled-tonal-button>
+          <md-filled-button onClick={() => exportSkin(selected, `mcaisd-skin-${Date.now()}.png`)}>
             <Download size={18} />
             导出 PNG
-          </button>
+          </md-filled-button>
         </div>
       </section>
 
@@ -199,14 +214,15 @@ export default function App() {
             <span>生成</span>
           </div>
 
-          <label className="field">
-            <span>角色描述</span>
-            <textarea
-              value={options.prompt}
-              onChange={(event) => updateOption("prompt", event.target.value)}
-              rows={5}
-            />
-          </label>
+          <md-outlined-text-field
+            ref={promptFieldRef}
+            className="material-field prompt-field"
+            label="角色描述"
+            rows={5}
+            type="textarea"
+            value={options.prompt}
+            onInput={(event) => updateOption("prompt", (event.currentTarget as HTMLElement & { value: string }).value)}
+          />
 
           <div className="example-list">
             {examples.map((example) => (
@@ -220,35 +236,47 @@ export default function App() {
             <span>风格</span>
             <div className="segmented">
               {styles.map((item) => (
-                <button
+                <md-filter-chip
                   key={item.value}
-                  className={options.style === item.value ? "active" : ""}
-                  type="button"
+                  selected={options.style === item.value}
+                  label={item.label}
                   onClick={() => updateOption("style", item.value)}
-                >
-                  {item.label}
-                </button>
+                />
               ))}
             </div>
           </label>
 
           <div className="split-fields">
             <label className="field">
-              <span>角色模型</span>
-              <select value={options.model} onChange={(event) => updateOption("model", event.target.value as SkinModel)}>
-                <option value="steve">Steve</option>
-                <option value="alex">Alex</option>
-              </select>
+              <md-outlined-select
+                ref={modelSelectRef}
+                className="material-field"
+                label="角色模型"
+                value={options.model}
+                onInput={(event) => updateOption("model", (event.currentTarget as HTMLElement & { value: SkinModel }).value)}
+              >
+                <md-select-option value="steve" selected={options.model === "steve"}>
+                  <div slot="headline">Steve</div>
+                </md-select-option>
+                <md-select-option value="alex" selected={options.model === "alex"}>
+                  <div slot="headline">Alex</div>
+                </md-select-option>
+              </md-outlined-select>
             </label>
             <label className="field">
-              <span>配饰</span>
-              <select value={options.accessory} onChange={(event) => updateOption("accessory", event.target.value)}>
+              <md-outlined-select
+                ref={accessorySelectRef}
+                className="material-field"
+                label="配饰"
+                value={options.accessory}
+                onInput={(event) => updateOption("accessory", (event.currentTarget as HTMLElement & { value: string }).value)}
+              >
                 {accessories.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
+                  <md-select-option key={item} value={item} selected={options.accessory === item}>
+                    <div slot="headline">{item}</div>
+                  </md-select-option>
                 ))}
-              </select>
+              </md-outlined-select>
             </label>
           </div>
 
@@ -265,19 +293,22 @@ export default function App() {
 
           <label className="field">
             <span>细节复杂度 {options.complexity}</span>
-            <input
-              type="range"
-              min="1"
-              max="9"
+            <md-slider
+              ref={complexitySliderRef}
+              min={1}
+              max={9}
+              step={1}
+              ticks
+              labeled
               value={options.complexity}
-              onChange={(event) => updateOption("complexity", Number(event.target.value))}
+              onInput={(event) => updateOption("complexity", Number((event.currentTarget as HTMLElement & { value: number }).value))}
             />
           </label>
 
-          <button className="generate-button" type="button" onClick={generate} disabled={isGenerating}>
+          <md-filled-button className="generate-button" onClick={generate} disabled={isGenerating}>
             <Sparkles size={18} />
             {isGenerating ? "生成中" : "生成 4 个候选"}
-          </button>
+          </md-filled-button>
 
           <div className="candidate-grid">
             {candidates.map((candidate, index) => (
@@ -299,10 +330,10 @@ export default function App() {
               <ImageIcon size={18} />
               <span>实时预览</span>
             </div>
-            <button className="icon-text-button" type="button" onClick={() => setShowOuterLayer((value) => !value)}>
+            <md-filled-tonal-button onClick={() => setShowOuterLayer((value) => !value)}>
               {showOuterLayer ? <Eye size={17} /> : <EyeOff size={17} />}
               外层
-            </button>
+            </md-filled-tonal-button>
           </div>
           <div className="model-area">
             <SkinModelPreview textureUrl={textureUrl} model={options.model} showOuterLayer={showOuterLayer} />
@@ -316,24 +347,24 @@ export default function App() {
           </div>
 
           <div className="tool-grid">
-            <button className={tool === "brush" ? "active" : ""} type="button" onClick={() => setTool("brush")} title="画笔">
+            <md-filled-icon-button selected={tool === "brush"} onClick={() => setTool("brush")} title="画笔">
               <Brush size={18} />
-            </button>
-            <button className={tool === "eraser" ? "active" : ""} type="button" onClick={() => setTool("eraser")} title="橡皮">
+            </md-filled-icon-button>
+            <md-filled-icon-button selected={tool === "eraser"} onClick={() => setTool("eraser")} title="橡皮">
               <Eraser size={18} />
-            </button>
-            <button className={tool === "picker" ? "active" : ""} type="button" onClick={() => setTool("picker")} title="吸色">
+            </md-filled-icon-button>
+            <md-filled-icon-button selected={tool === "picker"} onClick={() => setTool("picker")} title="吸色">
               <Pipette size={18} />
-            </button>
-            <button type="button" onClick={undo} disabled={history.length === 0} title="撤销">
+            </md-filled-icon-button>
+            <md-icon-button onClick={undo} disabled={history.length === 0} title="撤销">
               <Undo2 size={18} />
-            </button>
-            <button type="button" onClick={redo} disabled={redoStack.length === 0} title="重做">
+            </md-icon-button>
+            <md-icon-button onClick={redo} disabled={redoStack.length === 0} title="重做">
               <Redo2 size={18} />
-            </button>
-            <button type="button" onClick={() => setShowGrid((value) => !value)} title="网格">
+            </md-icon-button>
+            <md-icon-button onClick={() => setShowGrid((value) => !value)} title="网格">
               <History size={18} />
-            </button>
+            </md-icon-button>
           </div>
 
           <div className="active-color">

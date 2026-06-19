@@ -5,6 +5,16 @@
   background: #eef0f4;
   font-synthesis: none;
   text-rendering: geometricPrecision;
+  --md-sys-color-primary: #0f766e;
+  --md-sys-color-on-primary: #ffffff;
+  --md-sys-color-primary-container: #9cf1e6;
+  --md-sys-color-on-primary-container: #00201c;
+  --md-sys-color-secondary-container: #d3e8e4;
+  --md-sys-color-on-secondary-container: #06201c;
+  --md-sys-color-surface: #fbfcff;
+  --md-sys-color-surface-container: #eef4f4;
+  --md-sys-color-outline: #6f7977;
+  --md-sys-shape-corner-full: 999px;
 }
 
 * {
@@ -64,6 +74,23 @@ h1 {
   gap: 10px;
 }
 
+md-filled-button,
+md-filled-tonal-button,
+md-outlined-button {
+  --md-filled-button-container-shape: 10px;
+  --md-filled-tonal-button-container-shape: 10px;
+  --md-outlined-button-container-shape: 10px;
+}
+
+md-filled-button svg,
+md-filled-tonal-button svg,
+md-outlined-button svg {
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
 .workspace {
   display: grid;
   grid-template-columns: minmax(300px, 360px) minmax(420px, 1fr) minmax(310px, 390px);
@@ -87,6 +114,10 @@ h1 {
 .panel {
   padding: 16px;
   overflow: auto;
+}
+
+.generator-panel {
+  overflow-x: hidden;
 }
 
 .panel-heading,
@@ -123,6 +154,16 @@ select {
   border-radius: 7px;
   background: #ffffff;
   color: #16191f;
+}
+
+.material-field {
+  width: 100%;
+  max-width: 100%;
+}
+
+.prompt-field {
+  margin-top: 14px;
+  --md-outlined-text-field-container-shape: 8px;
 }
 
 textarea {
@@ -163,27 +204,18 @@ select {
   gap: 6px;
 }
 
-.segmented button,
-.tool-grid button,
-.ghost-button,
-.icon-text-button {
-  min-height: 36px;
-  border-radius: 7px;
-  background: #eef2f6;
-  color: #26313f;
-  cursor: pointer;
-}
-
-.segmented button.active,
-.tool-grid button.active {
-  background: #0f766e;
-  color: #ffffff;
+.segmented md-filter-chip {
+  width: 100%;
 }
 
 .split-fields {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 10px;
+}
+
+.split-fields > .field {
+  min-width: 0;
 }
 
 .color-row {
@@ -233,21 +265,12 @@ input[type="range"] {
 .generate-button {
   width: 100%;
   margin-top: 16px;
+  --md-filled-button-container-shape: 10px;
 }
 
 .generate-button:disabled {
   background: #83aaa6;
   cursor: wait;
-}
-
-.ghost-button,
-.icon-text-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 0 12px;
-  font-weight: 700;
 }
 
 .candidate-grid {
@@ -307,15 +330,16 @@ input[type="range"] {
   margin-top: 14px;
 }
 
-.tool-grid button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+.tool-grid md-filled-icon-button,
+.tool-grid md-icon-button {
+  justify-self: center;
+  --md-filled-icon-button-container-shape: 10px;
+  --md-icon-button-state-layer-shape: 10px;
 }
 
-.tool-grid button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+.tool-grid svg {
+  width: 18px;
+  height: 18px;
 }
 
 .active-color {
