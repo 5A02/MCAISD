@@ -362,6 +362,14 @@ function drawSemanticHair(image: ImageData, palette: ReturnType<typeof buildSema
   fillRect(image, 0, 8, 8, 4, shade(palette.hair, -8));
   fillRect(image, 16, 8, 8, 4, shade(palette.hair, -14));
   fillRect(image, 24, 8, 8, 4, shade(palette.hair, -24));
+  fillRect(image, 8, 0, 8, 8, shade(palette.hair, 6));
+  fillRect(image, 16, 0, 8, 2, shade(palette.hair, -18));
+  fillRect(image, 40, 8, 8, 2, palette.hair, 235);
+  fillRect(image, 40, 10, 1, 4, shade(palette.hair, -10), 230);
+  fillRect(image, 47, 10, 1, 3, shade(palette.hair, -14), 230);
+  fillRect(image, 32, 8, 1, 4, shade(palette.hair, -10), 225);
+  fillRect(image, 55, 8, 1, 4, shade(palette.hair, -14), 225);
+  fillRect(image, 56, 8, 8, 2, shade(palette.hair, -22), 225);
 
   for (let x = 9; x <= 14; x += 1) {
     if (rng() > 0.35) setRawPixel(image, x, 10 + Math.floor(rng() * 2), shade(palette.hair, 22));
