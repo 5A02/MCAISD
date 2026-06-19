@@ -174,7 +174,7 @@ export function generateSkin(options: SkinOptions, variant = 0): ImageData {
   drawSemanticArms(image, palette, options.model);
   drawSemanticLegs(image, palette);
   drawSemanticAccessory(image, palette, options, rng);
-  scatterHighlights(image, palette, options.complexity, rng);
+  scatterHighlights(image, palette, Math.min(options.complexity, 3), rng);
 
   return image;
 }
@@ -608,7 +608,7 @@ function drawAccessory(image: ImageData, accessory: string, palette: ReturnType<
 }
 
 function scatterHighlights(image: ImageData, palette: ReturnType<typeof buildPalette>, complexity: number, rng: () => number): void {
-  const total = Math.floor(18 + complexity * 6);
+  const total = Math.floor(4 + complexity * 3);
   const drawable = [
     ...PART_RECTS.torso,
     ...PART_RECTS.rightArm,
@@ -620,7 +620,7 @@ function scatterHighlights(image: ImageData, palette: ReturnType<typeof buildPal
     const rect = drawable[Math.floor(rng() * drawable.length)];
     const x = rect.x + Math.floor(rng() * rect.w);
     const y = rect.y + Math.floor(rng() * rect.h);
-    setRawPixel(image, x, y, rng() > 0.5 ? shade(palette.main, 34) : shade(palette.main, -34), Math.floor(210 + rng() * 45));
+    setRawPixel(image, x, y, rng() > 0.5 ? shade(palette.main, 18) : shade(palette.main, -18), Math.floor(190 + rng() * 45));
   }
 }
 

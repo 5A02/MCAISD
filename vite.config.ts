@@ -106,38 +106,17 @@ async function callLlm(options: Required<SkinOptions>, env: Record<string, strin
         {
           role: "system",
           content:
-            "You design small detail overlays for Minecraft Java 64x64 skins. Return strict JSON only. Use #RRGGBB colors. The local renderer already creates the base head, body, outfit, and equipment from the user's prompt. Your drawCommands should only add small details, trims, symbols, highlights, scratches, wires, buttons, emblems, and ornaments.",
+            "You translate user prompts into structured Minecraft Java skin options. Return strict JSON only. Use #RRGGBB colors. Do not output pixel instructions. Preserve the user's requested character identity, colors, equipment, and era.",
         },
         {
           role: "user",
           content: JSON.stringify({
-            task: "Create a faithful Minecraft skin plan and 4 variants. Every variant must keep the requested character identity and include only small detail drawCommands for the local semantic renderer.",
+            task: "Create a faithful Minecraft skin plan and 4 semantic variants. Every variant must keep the requested character identity. Vary only trim, color accents, equipment wording, and detail density.",
             input: options,
-            uvGuide: {
-              headFront: "x 8-15, y 8-15",
-              headOuterFront: "x 40-47, y 8-15",
-              torsoFront: "x 20-27, y 20-31",
-              torsoBack: "x 32-39, y 20-31",
-              torsoOuterFront: "x 20-27, y 36-47",
-              torsoOuterBack: "x 32-39, y 36-47",
-              rightArmFront: "x 44-47, y 20-31",
-              leftArmFront: "x 36-39, y 52-63",
-              rightLegFront: "x 4-7, y 20-31",
-              leftLegFront: "x 20-23, y 52-63",
-              note: "All coordinates are inclusive on a 64x64 PNG. Avoid empty transparent areas unless intentionally erasing.",
-            },
             commandRules: [
-              "Use 12-28 drawCommands per variant. Keep every rect/checker at 18 pixels or smaller.",
-              "Do not draw full head, full torso, full arms, full legs, or large clothing panels. The local renderer already does that.",
               "Do not change the user's character role, species, gender, era, equipment, or named colors.",
               "All 4 variants must keep every explicit object requested by the user. Vary only layout, trim, ornament density, and small color accents.",
               "If the user says knight, every variant is a knight. Do not output squire, apothecary, herald, mage, robot, or unrelated roles.",
-              "Use rect only for small emblems, buckles, rivets, highlights, scratches, visor slits, tiny armor plates, and trim.",
-              "Use line or pixel for eyes, straps, glowing wires, stars, logos, shield symbols, trims, and small ornaments.",
-              "Use checker for cloth, chainmail, plaid, magic texture, or mechanical plating.",
-              "Keep the main requested object on visible front coordinates: headFront, torsoFront, armsFront, legsFront.",
-              "If the user asks for a cape, draw it on torsoBack and torsoOuterBack.",
-              "If the user asks for a shield/logo/emblem, draw it at torsoFront x 22-25, y 23-28.",
               "Make the 4 variants meaningfully different while matching the same prompt.",
             ],
             schema: {
@@ -157,12 +136,6 @@ async function callLlm(options: Required<SkinOptions>, env: Record<string, strin
                   style: "style",
                   complexity: "1-9 integer",
                   notes: ["short reasons for key visual decisions"],
-                  drawCommands: [
-                    { type: "rect", x: 20, y: 20, w: 8, h: 2, color: "#RRGGBB", alpha: 255 },
-                    { type: "line", x1: 22, y1: 23, x2: 25, y2: 23, color: "#RRGGBB" },
-                    { type: "pixel", x: 11, y: 12, color: "#RRGGBB" },
-                    { type: "checker", x: 20, y: 24, w: 8, h: 4, colorA: "#RRGGBB", colorB: "#RRGGBB" },
-                  ],
                 },
               ],
             },
@@ -224,7 +197,7 @@ function sanitizePlan(raw: any, fallback: Required<SkinOptions>) {
         style,
         complexity,
         notes: normalizeNotes(variant.notes),
-        drawCommands: [...normalizeDrawCommands(variant.drawCommands), ...buildMandatoryDrawCommands(anchoredOptions)],
+        drawCommands: [],
       };
     }),
   };
