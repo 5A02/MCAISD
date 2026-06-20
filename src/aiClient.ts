@@ -23,7 +23,7 @@ export type AiSkinPlan = {
 };
 
 export async function generateSkinPlan(options: SkinOptions): Promise<AiSkinPlan> {
-  const response = await fetch("/api/generate-skin", {
+  const response = await fetch(`${getApiBaseUrl()}/api/generate-skin`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -37,4 +37,8 @@ export async function generateSkinPlan(options: SkinOptions): Promise<AiSkinPlan
   }
 
   return response.json() as Promise<AiSkinPlan>;
+}
+
+function getApiBaseUrl(): string {
+  return new URLSearchParams(globalThis.location.search).get("apiBase") || "";
 }
