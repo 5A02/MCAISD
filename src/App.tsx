@@ -122,12 +122,22 @@ export default function App() {
     return Number.isFinite(innerValue) && innerValue > 0 ? innerValue : fallback;
   }
 
+  function inferStyle(prompt: string): SkinOptions["style"] {
+    const text = prompt.toLowerCase();
+    if (text.includes("机甲") || text.includes("机器人") || text.includes("mecha") || text.includes("robot")) return "mecha";
+    if (text.includes("魔法") || text.includes("法师") || text.includes("星星") || text.includes("magic") || text.includes("wizard")) return "magic";
+    if (text.includes("中世纪") || text.includes("骑士") || text.includes("盔甲") || text.includes("medieval") || text.includes("knight")) return "medieval";
+    if (text.includes("校园") || text.includes("校服") || text.includes("school")) return "school";
+    if (text.includes("赛博") || text.includes("霓虹") || text.includes("cyber") || text.includes("neon")) return "cyberpunk";
+    return "adventure";
+  }
+
   function currentOptionsFromControls(): SkinOptions {
     const prompt = readMaterialValue(promptFieldRef, options.prompt);
     return {
       ...options,
       prompt,
-      style: "adventure",
+      style: inferStyle(prompt),
       model: readMaterialValue(modelSelectRef, options.model) as SkinModel,
       accessory: "无",
       complexity: readMaterialNumber(complexitySliderRef, options.complexity),
@@ -143,7 +153,7 @@ export default function App() {
       const plan = await generateSkinPlan(generationOptions);
       const nextOptions: SkinOptions = {
         prompt: plan.prompt,
-        style: "adventure",
+        style: plan.style,
         model: plan.model,
         mainColor: plan.mainColor,
         hairColor: plan.hairColor,
@@ -156,7 +166,7 @@ export default function App() {
           {
             ...nextOptions,
             prompt: variant.prompt,
-            style: "adventure",
+            style: variant.style,
             mainColor: variant.mainColor,
             hairColor: variant.hairColor,
             accessory: "无",

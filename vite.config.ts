@@ -73,7 +73,7 @@ function readRequestBody(req: IncomingMessage): Promise<string> {
 function normalizeOptions(input: SkinOptions): Required<SkinOptions> {
   return {
     prompt: String(input.prompt || "Minecraft skin").slice(0, 800),
-    style: "adventure",
+    style: inferStyle(String(input.prompt || "Minecraft skin")),
     model: input.model === "alex" ? "alex" : "steve",
     mainColor: normalizeHex(input.mainColor, "#2f80ed"),
     hairColor: normalizeHex(input.hairColor, "#f5f7ff"),
@@ -158,7 +158,7 @@ function sanitizePlan(raw: any, fallback: Required<SkinOptions>) {
   const variants = Array.isArray(raw?.variants) ? raw.variants.slice(0, 4) : [];
   const base = {
     prompt: String(raw?.prompt || fallback.prompt),
-    style: "adventure",
+    style: inferStyle(String(raw?.prompt || fallback.prompt)),
     model: raw?.model === "alex" ? "alex" : fallback.model,
     mainColor: normalizeHex(raw?.mainColor, fallback.mainColor),
     hairColor: normalizeHex(raw?.hairColor, fallback.hairColor),
@@ -174,7 +174,7 @@ function sanitizePlan(raw: any, fallback: Required<SkinOptions>) {
       const mainColor = normalizeHex(variant.mainColor, base.mainColor);
       const hairColor = normalizeHex(variant.hairColor, base.hairColor);
       const accessory = "无";
-      const style = "adventure";
+      const style = inferStyle(`${fallback.prompt} ${variantDetail}`);
       const complexity = clampInt(Number(variant.complexity || base.complexity), 1, 9);
       const anchoredOptions = {
         prompt: fallback.prompt,
@@ -203,6 +203,16 @@ function parseJsonContent(content: string): unknown {
   const trimmed = content.trim();
   const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
   return JSON.parse(fenced ? fenced[1] : trimmed);
+}
+
+function inferStyle(prompt: string): SkinStyle {
+  const text = prompt.toLowerCase();
+  if (matchesAny(text, ["mecha", "robot", "机甲", "机器人"])) return "mecha";
+  if (matchesAny(text, ["magic", "wizard", "star", "魔法", "法师", "星星"])) return "magic";
+  if (matchesAny(text, ["medieval", "knight", "armor", "中世纪", "骑士", "盔甲"])) return "medieval";
+  if (matchesAny(text, ["school", "校服", "校园"])) return "school";
+  if (matchesAny(text, ["cyber", "neon", "赛博", "霓虹"])) return "cyberpunk";
+  return "adventure";
 }
 
 function normalizeHex(value: unknown, fallback: string): string {
