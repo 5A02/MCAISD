@@ -54,13 +54,10 @@ const styles: Array<{ value: SkinStyle; label: string }> = [
   { value: "mecha", label: "机甲" },
 ];
 
-const accessories = ["无", "耳机", "面具", "围巾", "披风"];
-
 export default function App() {
   const importInputRef = useRef<HTMLInputElement | null>(null);
   const promptFieldRef = useRef<HTMLElement & { value: string }>(null);
   const modelSelectRef = useRef<HTMLElement & { value: string }>(null);
-  const accessorySelectRef = useRef<HTMLElement & { value: string }>(null);
   const complexitySliderRef = useRef<HTMLElement & { value: number }>(null);
   const generateButtonRef = useRef<HTMLElement | null>(null);
   const generateRef = useRef<() => void>(() => undefined);
@@ -70,7 +67,7 @@ export default function App() {
     model: "steve",
     mainColor: "#2f80ed",
     hairColor: "#f5f7ff",
-    accessory: "披风",
+    accessory: "无",
     complexity: 5,
   });
   const [candidates, setCandidates] = useState<Candidate[]>(() =>
@@ -83,7 +80,7 @@ export default function App() {
           model: "steve",
           mainColor: "#2f80ed",
           hairColor: "#f5f7ff",
-          accessory: "披风",
+          accessory: "无",
           complexity: 5,
         },
         variant,
@@ -108,9 +105,6 @@ export default function App() {
     }
     if (modelSelectRef.current && modelSelectRef.current.value !== options.model) {
       modelSelectRef.current.value = options.model;
-    }
-    if (accessorySelectRef.current && accessorySelectRef.current.value !== options.accessory) {
-      accessorySelectRef.current.value = options.accessory;
     }
     if (complexitySliderRef.current && complexitySliderRef.current.value !== options.complexity) {
       complexitySliderRef.current.value = options.complexity;
@@ -143,7 +137,7 @@ export default function App() {
       ...options,
       prompt: readMaterialValue(promptFieldRef, options.prompt),
       model: readMaterialValue(modelSelectRef, options.model) as SkinModel,
-      accessory: readMaterialValue(accessorySelectRef, options.accessory),
+      accessory: "无",
       complexity: readMaterialNumber(complexitySliderRef, options.complexity),
     };
   }
@@ -161,7 +155,7 @@ export default function App() {
         model: plan.model,
         mainColor: plan.mainColor,
         hairColor: plan.hairColor,
-        accessory: plan.accessory,
+        accessory: "无",
         complexity: plan.complexity,
       };
       const next = plan.variants.map((variant, index) => ({
@@ -173,7 +167,7 @@ export default function App() {
             style: variant.style,
             mainColor: variant.mainColor,
             hairColor: variant.hairColor,
-            accessory: variant.accessory,
+            accessory: "无",
             complexity: variant.complexity,
           },
           index,
@@ -345,21 +339,6 @@ export default function App() {
                 <md-select-option value="alex" selected={options.model === "alex"}>
                   <div slot="headline">Alex</div>
                 </md-select-option>
-              </md-outlined-select>
-            </label>
-            <label className="field">
-              <md-outlined-select
-                ref={accessorySelectRef}
-                className="material-field"
-                label="配饰"
-                value={options.accessory}
-                onInput={(event) => updateOption("accessory", (event.currentTarget as HTMLElement & { value: string }).value)}
-              >
-                {accessories.map((item) => (
-                  <md-select-option key={item} value={item} selected={options.accessory === item}>
-                    <div slot="headline">{item}</div>
-                  </md-select-option>
-                ))}
               </md-outlined-select>
             </label>
           </div>
@@ -586,7 +565,6 @@ function MinecraftCharacter({ textureUrl, model, showOuterLayer }: { textureUrl:
   return (
     <group>
       <MappedBox position={[0, 2.35, 0]} scale={[0.9, 0.9, 0.9]} faces={UV.head} material={material} />
-      <MappedBox position={[0, 2.35, 0]} scale={[1.02, 1.02, 1.02]} faces={UV.headOuter} material={outerMaterial} />
       <MappedBox position={[0, 1.25, 0]} scale={[0.9, 1.25, 0.48]} faces={UV.body} material={material} />
       <MappedBox position={[0, 1.25, 0]} scale={[0.98, 1.33, 0.54]} faces={UV.bodyOuter} material={outerMaterial} />
       <MappedBox position={[-0.68, 1.25, 0]} scale={[armWidth, 1.25, 0.45]} faces={UV.rightArm} material={material} />

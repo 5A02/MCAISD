@@ -77,7 +77,7 @@ function normalizeOptions(input: SkinOptions): Required<SkinOptions> {
     model: input.model === "alex" ? "alex" : "steve",
     mainColor: normalizeHex(input.mainColor, "#2f80ed"),
     hairColor: normalizeHex(input.hairColor, "#f5f7ff"),
-    accessory: String(input.accessory || "无").slice(0, 40),
+    accessory: "无",
     complexity: clampInt(Number(input.complexity || 5), 1, 9),
   };
 }
@@ -125,14 +125,12 @@ async function callLlm(options: Required<SkinOptions>, env: Record<string, strin
               model: "steve|alex",
               mainColor: "#RRGGBB",
               hairColor: "#RRGGBB",
-              accessory: "无|耳机|面具|围巾|披风",
               complexity: "1-9 integer",
               variants: [
                 {
                   prompt: "string with visual details",
                   mainColor: "#RRGGBB",
                   hairColor: "#RRGGBB",
-                  accessory: "string",
                   style: "style",
                   complexity: "1-9 integer",
                   notes: ["short reasons for key visual decisions"],
@@ -166,7 +164,7 @@ function sanitizePlan(raw: any, fallback: Required<SkinOptions>) {
     model: raw?.model === "alex" ? "alex" : fallback.model,
     mainColor: normalizeHex(raw?.mainColor, fallback.mainColor),
     hairColor: normalizeHex(raw?.hairColor, fallback.hairColor),
-    accessory: String(raw?.accessory || fallback.accessory).slice(0, 40),
+    accessory: "无",
     complexity: clampInt(Number(raw?.complexity || fallback.complexity), 1, 9),
   };
 
@@ -177,7 +175,7 @@ function sanitizePlan(raw: any, fallback: Required<SkinOptions>) {
       const variantDetail = String(variant.prompt || `variant ${index + 1}`).slice(0, 240);
       const mainColor = normalizeHex(variant.mainColor, base.mainColor);
       const hairColor = normalizeHex(variant.hairColor, base.hairColor);
-      const accessory = String(variant.accessory || base.accessory).slice(0, 40);
+      const accessory = "无";
       const style = normalizeStyle(variant.style || base.style);
       const complexity = clampInt(Number(variant.complexity || base.complexity), 1, 9);
       const anchoredOptions = {

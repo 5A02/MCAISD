@@ -173,7 +173,6 @@ export function generateSkin(options: SkinOptions, variant = 0): ImageData {
   drawSemanticOutfit(image, palette, options, rng);
   drawSemanticArms(image, palette, options.model);
   drawSemanticLegs(image, palette);
-  drawSemanticAccessory(image, palette, options, rng);
   scatterHighlights(image, palette, Math.min(options.complexity, 3), rng);
 
   return image;
@@ -352,7 +351,6 @@ function drawSemanticHair(image: ImageData, palette: ReturnType<typeof buildSema
     fillRect(image, 16, 0, 8, 8, shade(palette.helmet, -24));
     fillRect(image, 10, 12, 5, 1, palette.accent);
     fillRect(image, 10, 14, 5, 1, shade(palette.metal, 22));
-    fillRect(image, 40, 8, 8, 8, shade(palette.helmet, 18), 235);
     return;
   }
 
@@ -364,12 +362,6 @@ function drawSemanticHair(image: ImageData, palette: ReturnType<typeof buildSema
   fillRect(image, 24, 8, 8, 4, shade(palette.hair, -24));
   fillRect(image, 8, 0, 8, 8, shade(palette.hair, 6));
   fillRect(image, 16, 0, 8, 2, shade(palette.hair, -18));
-  fillRect(image, 40, 8, 8, 2, palette.hair, 235);
-  fillRect(image, 40, 10, 1, 4, shade(palette.hair, -10), 230);
-  fillRect(image, 47, 10, 1, 3, shade(palette.hair, -14), 230);
-  fillRect(image, 32, 8, 1, 4, shade(palette.hair, -10), 225);
-  fillRect(image, 55, 8, 1, 4, shade(palette.hair, -14), 225);
-  fillRect(image, 56, 8, 8, 2, shade(palette.hair, -22), 225);
 
   for (let x = 9; x <= 14; x += 1) {
     if (rng() > 0.35) setRawPixel(image, x, 10 + Math.floor(rng() * 2), shade(palette.hair, 22));
