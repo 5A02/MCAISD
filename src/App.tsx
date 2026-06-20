@@ -29,7 +29,6 @@ import {
   setPixel,
   type SkinModel,
   type SkinOptions,
-  type SkinStyle,
   type Tool,
 } from "./skin";
 
@@ -39,19 +38,10 @@ type Candidate = {
 };
 
 const examples = [
-  "蓝色卫衣、白发、赛博风、背后有披风的男生",
-  "红黑配色的中世纪骑士，胸前有盾牌标志",
-  "绿色眼睛的魔法少女，紫色长袍和星星装饰",
-  "银灰色机器人，机甲外套，蓝色发光线条",
-];
-
-const styles: Array<{ value: SkinStyle; label: string }> = [
-  { value: "adventure", label: "冒险" },
-  { value: "cyberpunk", label: "赛博" },
-  { value: "medieval", label: "中世纪" },
-  { value: "school", label: "校园" },
-  { value: "magic", label: "魔法" },
-  { value: "mecha", label: "机甲" },
+  "蓝色卫衣、白发、简洁像素男生",
+  "红黑配色外套，胸前有盾牌图案",
+  "绿色眼睛少女，紫色长袖上衣",
+  "银灰色外套，蓝色线条装饰",
 ];
 
 export default function App() {
@@ -63,7 +53,7 @@ export default function App() {
   const generateRef = useRef<() => void>(() => undefined);
   const [options, setOptions] = useState<SkinOptions>({
     prompt: examples[0],
-    style: "cyberpunk",
+    style: "adventure",
     model: "steve",
     mainColor: "#2f80ed",
     hairColor: "#f5f7ff",
@@ -76,7 +66,7 @@ export default function App() {
       image: generateSkin(
         {
           prompt: examples[0],
-          style: "cyberpunk",
+          style: "adventure",
           model: "steve",
           mainColor: "#2f80ed",
           hairColor: "#f5f7ff",
@@ -133,9 +123,11 @@ export default function App() {
   }
 
   function currentOptionsFromControls(): SkinOptions {
+    const prompt = readMaterialValue(promptFieldRef, options.prompt);
     return {
       ...options,
-      prompt: readMaterialValue(promptFieldRef, options.prompt),
+      prompt,
+      style: "adventure",
       model: readMaterialValue(modelSelectRef, options.model) as SkinModel,
       accessory: "无",
       complexity: readMaterialNumber(complexitySliderRef, options.complexity),
@@ -151,7 +143,7 @@ export default function App() {
       const plan = await generateSkinPlan(generationOptions);
       const nextOptions: SkinOptions = {
         prompt: plan.prompt,
-        style: plan.style,
+        style: "adventure",
         model: plan.model,
         mainColor: plan.mainColor,
         hairColor: plan.hairColor,
@@ -164,7 +156,7 @@ export default function App() {
           {
             ...nextOptions,
             prompt: variant.prompt,
-            style: variant.style,
+            style: "adventure",
             mainColor: variant.mainColor,
             hairColor: variant.hairColor,
             accessory: "无",
@@ -310,20 +302,6 @@ export default function App() {
             ))}
           </div>
 
-          <label className="field">
-            <span>风格</span>
-            <div className="segmented">
-              {styles.map((item) => (
-                <md-filter-chip
-                  key={item.value}
-                  selected={options.style === item.value}
-                  label={item.label}
-                  onClick={() => updateOption("style", item.value)}
-                />
-              ))}
-            </div>
-          </label>
-
           <div className="split-fields">
             <label className="field">
               <md-outlined-select
@@ -340,17 +318,6 @@ export default function App() {
                   <div slot="headline">Alex</div>
                 </md-select-option>
               </md-outlined-select>
-            </label>
-          </div>
-
-          <div className="color-row">
-            <label>
-              <span>主色</span>
-              <input type="color" value={options.mainColor} onChange={(event) => updateOption("mainColor", event.target.value)} />
-            </label>
-            <label>
-              <span>发色</span>
-              <input type="color" value={options.hairColor} onChange={(event) => updateOption("hairColor", event.target.value)} />
             </label>
           </div>
 

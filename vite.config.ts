@@ -73,7 +73,7 @@ function readRequestBody(req: IncomingMessage): Promise<string> {
 function normalizeOptions(input: SkinOptions): Required<SkinOptions> {
   return {
     prompt: String(input.prompt || "Minecraft skin").slice(0, 800),
-    style: normalizeStyle(input.style),
+    style: "adventure",
     model: input.model === "alex" ? "alex" : "steve",
     mainColor: normalizeHex(input.mainColor, "#2f80ed"),
     hairColor: normalizeHex(input.hairColor, "#f5f7ff"),
@@ -121,7 +121,6 @@ async function callLlm(options: Required<SkinOptions>, env: Record<string, strin
             ],
             schema: {
               prompt: "string",
-              style: "adventure|cyberpunk|medieval|school|magic|mecha",
               model: "steve|alex",
               mainColor: "#RRGGBB",
               hairColor: "#RRGGBB",
@@ -131,7 +130,6 @@ async function callLlm(options: Required<SkinOptions>, env: Record<string, strin
                   prompt: "string with visual details",
                   mainColor: "#RRGGBB",
                   hairColor: "#RRGGBB",
-                  style: "style",
                   complexity: "1-9 integer",
                   notes: ["short reasons for key visual decisions"],
                 },
@@ -160,7 +158,7 @@ function sanitizePlan(raw: any, fallback: Required<SkinOptions>) {
   const variants = Array.isArray(raw?.variants) ? raw.variants.slice(0, 4) : [];
   const base = {
     prompt: String(raw?.prompt || fallback.prompt),
-    style: normalizeStyle(raw?.style || fallback.style),
+    style: "adventure",
     model: raw?.model === "alex" ? "alex" : fallback.model,
     mainColor: normalizeHex(raw?.mainColor, fallback.mainColor),
     hairColor: normalizeHex(raw?.hairColor, fallback.hairColor),
@@ -176,7 +174,7 @@ function sanitizePlan(raw: any, fallback: Required<SkinOptions>) {
       const mainColor = normalizeHex(variant.mainColor, base.mainColor);
       const hairColor = normalizeHex(variant.hairColor, base.hairColor);
       const accessory = "无";
-      const style = normalizeStyle(variant.style || base.style);
+      const style = "adventure";
       const complexity = clampInt(Number(variant.complexity || base.complexity), 1, 9);
       const anchoredOptions = {
         prompt: fallback.prompt,
@@ -205,11 +203,6 @@ function parseJsonContent(content: string): unknown {
   const trimmed = content.trim();
   const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
   return JSON.parse(fenced ? fenced[1] : trimmed);
-}
-
-function normalizeStyle(value: unknown): SkinStyle {
-  const allowed: SkinStyle[] = ["adventure", "cyberpunk", "medieval", "school", "magic", "mecha"];
-  return allowed.includes(value as SkinStyle) ? (value as SkinStyle) : "cyberpunk";
 }
 
 function normalizeHex(value: unknown, fallback: string): string {
@@ -313,15 +306,6 @@ function buildMandatoryDrawCommands(options: Required<SkinOptions>): DrawCommand
       { type: "rect", x: 23, y: 26, w: 2, h: 2, color: "#ffffff", alpha: 255 },
       { type: "line", x1: 22, y1: 23, x2: 22, y2: 25, color: accent, alpha: 255 },
       { type: "line", x1: 25, y1: 23, x2: 25, y2: 25, color: accent, alpha: 255 },
-    );
-  }
-
-  if (matchesAny(prompt, ["cape", "cloak", "披风", "斗篷"])) {
-    commands.push(
-      { type: "rect", x: 32, y: 20, w: 8, h: 2, color: options.mainColor, alpha: 255 },
-      { type: "rect", x: 32, y: 36, w: 8, h: 2, color: options.mainColor, alpha: 230 },
-      { type: "line", x1: 33, y1: 21, x2: 33, y2: 31, color: accent, alpha: 255 },
-      { type: "line", x1: 38, y1: 21, x2: 38, y2: 31, color: accent, alpha: 255 },
     );
   }
 
